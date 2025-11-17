@@ -1,0 +1,64 @@
+name: ml-app CI
+
+on:
+  push:
+    paths:
+      - "session2/ml-app/**"
+  pull_request:
+    paths:
+      - "session2/ml-app/**"
+
+jobs:
+  build-test-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        working-directory: session2/ml-app
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest flake8
+
+      - name: Lint with flake8
+        working-directory: session2/ml-app
+        run: |
+          source .venv/bin/activate
+          flake8
+
+      - name: Run tests
+        working-directory: session2/ml-app
+        run: |
+          source .venv/bin/activate
+          pytest -v --junitxml=test-results.xml
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: session2/ml-app/test-results.xml
+
+      - name: Build Docker image
+        working-directory: session2/ml-app
+        run: |
+          docker build -t ml-app .
+
+      - name: Save Docker image artifact
+        run: |
+          docker save ml-app | gzip > ml-app.tar.gz
+
+      - name: Upload Docker image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ml-app-image
+          path: ml-app.tar.gz
