@@ -2,11 +2,10 @@ name: ml-app CI
 
 on:
   push:
-    paths:
-      - "session2/ml-app/**"
   pull_request:
-    paths:
-      - "session2/ml-app/**"
+  workflow_dispatch:
+
+
 
 jobs:
   build-test-lint:
